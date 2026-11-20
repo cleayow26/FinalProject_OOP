@@ -2,23 +2,26 @@
 
 A 2D rhythm platformer for Object-Oriented Programming final project.
 
-## Layout
+Team Members (NAME_NPM): 
+- Clyo Vania Timofey 2506558573
+- Faris Ahmad Zubair Bauw 2306217960
+- Ahmad Madany 2506634651
+- Raisha Zahra 2506559033
+- Muhammad Nurmajiid 2506634733
 
-- `client/` - Game client. Copied into the LibGDX game core
-- `backend/` - Spring Boot API, PostgreSQL, Flyway migrations.
-- `docs/` - Code documentation
+NEON PULSE combines the side-scrolling obstacle traversal of Geometry Dash with the rhythm-based interaction of Crypt of the NecroDancer (Along with other Rythm-based games such as OSU!Mania and Quaver)
 
-## Documentation
+The player crosses platforms, avoids hazards, and times jumps to music. Musical timing contributes to gameplay and scoring rather than serving only as background audio.
 
-- [Bakckend API](docs/API.md)
+The goal is to complete a level while earning accurate timing judgements.
 
-## Quick start
+The Design Patterns that will be used are:
 
-1. Copy `backend/.env.example` to `backend/.env` and replace each placeholder. The JWT secret must be at least 32 characters.
-2. From `backend/`, run `docker compose up --build`.
-3. Check `http://localhost:8080/actuator/health`.
+Command (Player Input and Buffer)
+Observer (Notifier)
+State (Player Behavior)
+Strategy (Judgement Algorithm System)
+Factory Method (Music Library)
+Adapter (Client-Backend Translation)
 
-## Tests
 
-- Backend: from `backend/`, run `./gradlew test`. Testcontainers needs a Docker daemon to mock a PostgreSQL server.
-- Client: from `client/`, run `./gradlew test`.
