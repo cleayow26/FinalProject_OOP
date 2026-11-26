@@ -1,0 +1,102 @@
+---
+config:
+  class: 
+    hideEmptyMembersBox: true
+---
+classDiagram
+    direction LR
+
+    namespace Integration {
+        class BackendGateway {
+            <<interface>>
+            +register(String username, String password) PlayerAccount
+            +login(String username, String password) PlayerAccount
+            +submitRun(PlayerAccount account, RunTally tally) RunResult
+            +getLeaderboard(int limit) List~LeaderboardRow~
+        }
+        class HttpBackendAdapter
+        class InMemoryBackendGateway
+        class TokenStore {
+            <<interface>>
+            +getToken() String
+            +saveToken(String token) void
+            +clear() void
+        }
+        class InMemoryTokenStore {
+            -String token
+        }
+        class BackendException {
+            +kind() Kind
+        }
+        class Kind["BackendException.Kind"] {
+            <<enumeration>>
+            UNAUTHORIZED
+            CONFLICT
+            INVALID
+            SERVER
+            TRANSPORT
+        }
+    }
+
+    namespace Models {
+        class PlayerAccount {
+            <<record>>
+            String username
+            String token
+        }
+        class RunTally {
+            <<record>>
+            String clientRunId
+            String level
+            int perfect
+            int good
+            int miss
+            long durationMs
+            boolean completed
+        }
+        class RunResult {
+            <<record>>
+            long id
+            String clientRunId
+            String level
+            int perfect
+            int good
+            int miss
+            long durationMs
+            boolean completed
+            int score
+            String submittedAt
+        }
+        class LeaderboardRow {
+            <<record>>
+            long rank
+            String username
+            int score
+            String submittedAt
+        }
+    }
+
+    namespace Java {
+        class HttpClient
+        class RuntimeException
+    }
+
+    BackendGateway <|.. HttpBackendAdapter
+    BackendGateway <|.. InMemoryBackendGateway
+    TokenStore <|.. InMemoryTokenStore
+    RuntimeException <|-- BackendException
+    HttpBackendAdapter --> TokenStore
+    HttpBackendAdapter --> HttpClient
+    BackendGateway ..> PlayerAccount : returns and accepts
+    BackendGateway ..> RunTally : accepts
+    BackendGateway ..> RunResult : returns
+    BackendGateway ..> LeaderboardRow : returns list
+    InMemoryBackendGateway --> PlayerAccount : stores accounts
+    InMemoryBackendGateway --> RunResult : stores runs
+    HttpBackendAdapter ..> BackendException : throws
+    InMemoryBackendGateway ..> BackendException : throws
+    BackendException --> Kind
+
+    note for BackendGateway "Implementations provide all four interface operations."
+    note for HttpBackendAdapter "HTTP boundary: POST /api/auth/register and /api/auth/login; POST /api/runs; GET /api/leaderboard. No Java dependency on backend classes."
+    note for PlayerAccount "Record components are shown without generated accessors."

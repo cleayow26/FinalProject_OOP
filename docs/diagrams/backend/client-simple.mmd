@@ -1,0 +1,49 @@
+---
+config:
+  class: 
+    hideEmptyMembersBox: true
+---
+classDiagram
+    direction LR
+
+    namespace Integration {
+        class BackendGateway { }
+        class HttpBackendAdapter
+        class InMemoryBackendGateway
+        class TokenStore { }
+        class InMemoryTokenStore { }
+        class BackendException { }
+        class Kind["BackendException.Kind"] { }
+    }
+
+    namespace Models {
+        class PlayerAccount { }
+        class RunTally { }
+        class RunResult { }
+        class LeaderboardRow { }
+    }
+
+    namespace Java {
+        class HttpClient
+        class RuntimeException
+    }
+
+    BackendGateway <|.. HttpBackendAdapter
+    BackendGateway <|.. InMemoryBackendGateway
+    TokenStore <|.. InMemoryTokenStore
+    RuntimeException <|-- BackendException
+    HttpBackendAdapter --> TokenStore
+    HttpBackendAdapter --> HttpClient
+    BackendGateway ..> PlayerAccount : returns and accepts
+    BackendGateway ..> RunTally : accepts
+    BackendGateway ..> RunResult : returns
+    BackendGateway ..> LeaderboardRow : returns list
+    InMemoryBackendGateway --> PlayerAccount : stores accounts
+    InMemoryBackendGateway --> RunResult : stores runs
+    HttpBackendAdapter ..> BackendException : throws
+    InMemoryBackendGateway ..> BackendException : throws
+    BackendException --> Kind
+
+    note for BackendGateway "Implementations provide all four interface operations."
+    note for HttpBackendAdapter "HTTP boundary: POST /api/auth/register and /api/auth/login; POST /api/runs; GET /api/leaderboard. No Java dependency on backend classes."
+    note for PlayerAccount "Record components are shown without generated accessors."

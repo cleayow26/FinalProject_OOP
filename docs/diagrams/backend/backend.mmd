@@ -1,0 +1,183 @@
+---
+config:
+  class: 
+    hideEmptyMembersBox: true
+---
+classDiagram
+    direction LR
+
+    namespace Auth {
+        class AuthController {
+            +register(RegisterRequest request) ResponseEntity~AuthResponse~
+            +login(LoginRequest request) AuthResponse
+        }
+        class MeController {
+            +me(Authentication authentication) Map~String,String~
+        }
+        class AuthService {
+            +register(RegisterRequest request) AuthResponse
+            +login(LoginRequest request) AuthResponse
+        }
+    }
+
+    namespace Runs {
+        class RunController {
+            +submit(Authentication authentication, SubmitRunRequest request) ResponseEntity~RunResultResponse~
+            +myRuns(Authentication authentication) List~RunResultResponse~
+        }
+        class RunService {
+            +submit(String username, SubmitRunRequest request) SubmissionResult
+            +findMyRuns(String username) List~RunResultResponse~
+        }
+        class SubmissionResult["RunService.SubmissionResult"] {
+            <<record>>
+            RunResultResponse response
+            boolean created
+        }
+        class ScorePolicy {
+            +compute(int perfect, int good, int miss, long durationMs, boolean completed) int$
+        }
+    }
+
+    namespace Leaderboard {
+        class LeaderboardController {
+            +top(int limit) List~LeaderboardEntry~
+        }
+        class LeaderboardService {
+            +top(int limit) List~LeaderboardEntry~
+        }
+        class LeaderboardEntry {
+            <<record>>
+            long rank
+            String username
+            int score
+            Instant submittedAt
+        }
+    }
+
+    namespace Persistence {
+        class UserRepository {
+            +existsByUsername(String username) boolean
+            +findByUsername(String username) Optional~User~
+            +insert(String username, String passwordHash) User
+        }
+        class User {
+            <<record>>
+            Long id
+            String username
+            String passwordHash
+            Instant createdAt
+        }
+        class RunRepository {
+            +findLevelIdByName(String name) Optional~Long~
+            +insert(Long userId, String levelName, SubmitRunRequest request, int score) RunResultResponse
+            +findByUserAndClientRunId(Long userId, String clientRunId) Optional~RunResultResponse~
+            +findAllByUser(Long userId) List~RunResultResponse~
+        }
+        class LeaderboardRepository {
+            +findTop(int limit) List~LeaderboardEntry~
+        }
+    }
+
+    namespace Security {
+        class JwtService {
+            +issueToken(String username) String
+            +parseUsername(String token) String
+        }
+        class JwtAuthFilter {
+            #doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) void
+        }
+        class SecurityConfig {
+            ~securityFilterChain(HttpSecurity http) SecurityFilterChain
+            ~passwordEncoder() PasswordEncoder
+        }
+    }
+
+    namespace Contracts {
+        class RegisterRequest {
+            <<record>>
+            String username
+            String password
+        }
+        class LoginRequest {
+            <<record>>
+            String username
+            String password
+        }
+        class AuthResponse {
+            <<record>>
+            String token
+            String username
+        }
+        class SubmitRunRequest {
+            <<record>>
+            String clientRunId
+            String level
+            int perfect
+            int good
+            int miss
+            long durationMs
+            boolean completed
+        }
+        class RunResultResponse {
+            <<record>>
+            Long id
+            String clientRunId
+            String level
+            int perfect
+            int good
+            int miss
+            long durationMs
+            boolean completed
+            int score
+            Instant submittedAt
+        }
+    }
+
+    namespace Framework {
+        class JdbcTemplate
+        class OncePerRequestFilter
+        class PasswordEncoder {
+            <<interface>>
+        }
+        class BCryptPasswordEncoder
+    }
+
+    AuthController --> AuthService
+    AuthService --> UserRepository
+    AuthService --> JwtService
+    AuthService --> PasswordEncoder
+    AuthService ..> RegisterRequest
+    AuthService ..> LoginRequest
+    AuthService ..> AuthResponse
+    UserRepository ..> User
+    UserRepository --> JdbcTemplate
+
+    RunController --> RunService
+    RunService --> RunRepository
+    RunService --> UserRepository
+    RunService ..> ScorePolicy : compute
+    RunService ..> SubmissionResult : returns
+    SubmissionResult --> RunResultResponse
+    RunRepository ..> SubmitRunRequest
+    RunRepository ..> RunResultResponse
+    RunRepository --> JdbcTemplate
+
+    LeaderboardController --> LeaderboardService
+    LeaderboardService --> LeaderboardRepository
+    LeaderboardRepository ..> LeaderboardEntry
+    LeaderboardRepository --> JdbcTemplate
+
+    OncePerRequestFilter <|-- JwtAuthFilter
+    PasswordEncoder <|.. BCryptPasswordEncoder
+    JwtAuthFilter --> JwtService
+    SecurityConfig --> JwtService
+    SecurityConfig ..> JwtAuthFilter : creates
+    SecurityConfig ..> BCryptPasswordEncoder : creates
+
+    note for AuthController "HTTP POST /api/auth/register and /api/auth/login."
+    note for MeController "HTTP GET /api/me. Reads the authenticated principal."
+    note for RunController "HTTP POST /api/runs and GET /api/runs/me."
+    note for LeaderboardController "HTTP GET /api/leaderboard."
+    note for SecurityConfig "Installs JwtAuthFilter. Authentication and health routes are public; other routes require authentication."
+    note for User "Record components are shown without generated accessors. Constructors, validation annotations, exception handling, and utility framework types are omitted."

@@ -1,0 +1,93 @@
+---
+config:
+  class: 
+    hideEmptyMembersBox: true
+---
+classDiagram
+    direction LR
+
+    namespace Auth {
+        class AuthController { }
+        class MeController { }
+        class AuthService { }
+    }
+
+    namespace Runs {
+        class RunController { }
+        class RunService { }
+        class SubmissionResult["RunService.SubmissionResult"] { }
+        class ScorePolicy { }
+    }
+
+    namespace Leaderboard {
+        class LeaderboardController { }
+        class LeaderboardService { }
+        class LeaderboardEntry { }
+    }
+
+    namespace Persistence {
+        class UserRepository { }
+        class User { }
+        class RunRepository { }
+        class LeaderboardRepository { }
+    }
+
+    namespace Security {
+        class JwtService { }
+        class JwtAuthFilter { }
+        class SecurityConfig { }
+    }
+
+    namespace Contracts {
+        class RegisterRequest { }
+        class LoginRequest { }
+        class AuthResponse { }
+        class SubmitRunRequest { }
+        class RunResultResponse { }
+    }
+
+    namespace Framework {
+        class JdbcTemplate
+        class OncePerRequestFilter
+        class PasswordEncoder { }
+        class BCryptPasswordEncoder
+    }
+
+    AuthController --> AuthService
+    AuthService --> UserRepository
+    AuthService --> JwtService
+    AuthService --> PasswordEncoder
+    AuthService ..> RegisterRequest
+    AuthService ..> LoginRequest
+    AuthService ..> AuthResponse
+    UserRepository ..> User
+    UserRepository --> JdbcTemplate
+
+    RunController --> RunService
+    RunService --> RunRepository
+    RunService --> UserRepository
+    RunService ..> ScorePolicy : compute
+    RunService ..> SubmissionResult : returns
+    SubmissionResult --> RunResultResponse
+    RunRepository ..> SubmitRunRequest
+    RunRepository ..> RunResultResponse
+    RunRepository --> JdbcTemplate
+
+    LeaderboardController --> LeaderboardService
+    LeaderboardService --> LeaderboardRepository
+    LeaderboardRepository ..> LeaderboardEntry
+    LeaderboardRepository --> JdbcTemplate
+
+    OncePerRequestFilter <|-- JwtAuthFilter
+    PasswordEncoder <|.. BCryptPasswordEncoder
+    JwtAuthFilter --> JwtService
+    SecurityConfig --> JwtService
+    SecurityConfig ..> JwtAuthFilter : creates
+    SecurityConfig ..> BCryptPasswordEncoder : creates
+
+    note for AuthController "HTTP POST /api/auth/register and /api/auth/login."
+    note for MeController "HTTP GET /api/me. Reads the authenticated principal."
+    note for RunController "HTTP POST /api/runs and GET /api/runs/me."
+    note for LeaderboardController "HTTP GET /api/leaderboard."
+    note for SecurityConfig "Installs JwtAuthFilter. Authentication and health routes are public; other routes require authentication."
+    note for User "Record components are shown without generated accessors. Constructors, validation annotations, exception handling, and utility framework types are omitted."
