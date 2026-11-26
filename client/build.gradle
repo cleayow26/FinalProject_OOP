@@ -1,5 +1,7 @@
+
 plugins {
     id 'java'
+    id 'application'
 }
 
 group = 'com.neonpulse'
@@ -17,9 +19,16 @@ repositories {
 
 dependencies {
     implementation 'com.badlogicgames.gdx:gdx:1.13.1'
+    implementation 'com.badlogicgames.gdx:gdx-backend-lwjgl3:1.13.1'
+
+    runtimeOnly 'com.badlogicgames.gdx:gdx-platform:1.13.1:natives-desktop'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+application {
+    mainClass = 'com.neonpulse.client.DesktopLauncher'
 }
 
 tasks.named('test') {
