@@ -8,11 +8,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AudioManager {
+    private static final float MUSIC_VOLUME = 0.5f;
+    private static final float SOUND_VOLUME = 0.15f;
+
     private static AudioManager instance;
 
-
-    private Map<String, Sound> soundMap;
-    private Map<String, Music> musicMap;
+    private final Map<String, Sound> soundMap;
+    private final Map<String, Music> musicMap;
     private Music currentMusic;
 
     private AudioManager() {
@@ -34,7 +36,7 @@ public class AudioManager {
         if (Gdx.audio != null && Gdx.files != null && Gdx.files.internal(filename).exists()) {
             soundMap.put(key, Gdx.audio.newSound(Gdx.files.internal(filename)));
         } else {
-            System.out.println("No SFX" + filename);
+            System.out.println("No SFX: " + filename);
         }
     }
 
@@ -45,7 +47,7 @@ public class AudioManager {
         if (Gdx.audio != null && Gdx.files != null && Gdx.files.internal(filename).exists()) {
             musicMap.put(key, Gdx.audio.newMusic(Gdx.files.internal(filename)));
         } else {
-            System.out.println("No BGM" + filename);
+            System.out.println("No BGM: " + filename);
         }
     }
 
@@ -60,29 +62,33 @@ public class AudioManager {
     public void playSound(String key) {
         Sound sound = getSound(key);
         if (sound != null) {
-            sound.play(0.15f);
+            sound.play(SOUND_VOLUME);
         }
     }
 
-
-
-    public void play(String introKey, String loopKey) {
-        Music intro = getMusic(introKey);
-        Music loop = getMusic(loopKey);
-        if (intro == null || loop == null) {
+    public void playMusic(String key) {
+        Music next = getMusic(key);
+        stopMusic();
+        if (next == null) {
+            System.out.println("Music not registered: " + key);
             return;
         }
-        stopMusic();
-        currentMusic = intro;
-        intro.setLooping(false);
-        intro.setVolume(0.5f);
-        intro.setOnCompletionListener(music -> {
-            currentMusic = loop;
-            loop.setLooping(true);
-            loop.setVolume(0.5f);
-            loop.play();
-        });
-        intro.play();
+        currentMusic = next;
+        next.setLooping(false);
+        next.setVolume(MUSIC_VOLUME);
+        next.play();
+    }
+
+    public void pauseMusic() {
+        if (currentMusic != null) {
+            currentMusic.pause();
+        }
+    }
+
+    public void resumeMusic() {
+        if (currentMusic != null) {
+            currentMusic.play();
+        }
     }
 
     public void stopMusic() {
@@ -93,12 +99,11 @@ public class AudioManager {
     }
 
     public void init() {
-        //REPLACE LATER
         registerMusic("bgm_stage1", "Music/stage1.ogg");
         registerMusic("bgm_stage2", "Music/stage2rev.ogg");
 
-        //REPLACE LATER
-        registerSound("sfx_shoot", "shoot.wav");
+        // DIRECTORY
+        registerSound("sfx_die", "");
     }
 
     public void dispose() {

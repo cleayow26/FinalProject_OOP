@@ -36,6 +36,34 @@ public class LevelData {
             {4650, GROUND_Y, 35, 55}
     };
 
+    private static final float SPIKE_INSET_X = 10f;
+    private static final float SPIKE_INSET_TOP = 10f;
+
+    public static float surfaceBelow(float left, float width, float fromY) {
+        float surface = GROUND_Y;
+        for (float[] p : PLATFORMS) {
+            float top = p[1] + p[3];
+            boolean overlaps = left + width > p[0] && left < p[0] + p[2];
+            if (overlaps && top <= fromY && top > surface) {
+                surface = top;
+            }
+        }
+        return surface;
+    }
+
+    public static boolean touchesSpike(float x, float y, float width, float height) {
+        for (float[] s : SPIKES) {
+            float left = s[0] + SPIKE_INSET_X;
+            float right = s[0] + s[2] - SPIKE_INSET_X;
+            float top = s[1] + s[3] - SPIKE_INSET_TOP;
+            if (x < right && x + width > left && y < top && y + height > s[1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     private LevelData() {
         // Utility class
     }
